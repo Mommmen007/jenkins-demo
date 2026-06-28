@@ -1,49 +1,7 @@
+The pipeline supports parameterized deployments by allowing the user to select the target environment (dev, stg, or prod). Based on the selected environment, Jenkins automatically initializes Terraform, selects the appropriate Terraform workspace (or creates it if it doesn't already exist), and runs terraform plan using the corresponding .tfvars file.
 
-# Update package index and install prerequisites
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+After the planning stage, the pipeline pauses for a manual approval step before proceeding with the deployment. Once approved, Terraform applies the changes to the selected environment.
 
-# Add Dockerâ€™s official GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+In addition, I configured post-build actions to send email notifications for both successful and failed pipeline executions, providing clear feedback about the deployment status.
 
-# Add Docker repository to sources
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Update package index again and install Docker
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io
-
-# Start and enable Docker service
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# Add current user to Docker group to run Docker without sudo (optional)
-sudo usermod -aG docker $USER
-
-
-chmod 777 /var/run/docker.sock
-
-
-
-
-
-#installation jenkins as docker container:
-sudo docker run -p 8080:8080 -p 50000:50000 -d \
- -v jenkins_home:/var/jenkins_home \
- -v /var/run/docker.sock:/var/run/docker.sock \
- -v $(which docker):/usr/bin/docker jenkins/jenkins:lts
-
-
-#view your container is up and running:
-docker ps 
-
-#to exec inside your container:
-docker exec -it container-name bash
-
-
-
-#to retrieve jenkins initation password 
-docker exec -it container-name bash \
-cat /var/jenkins_home/secrets/initialAdminPassword 
-
-
+This implementation demonstrates a complete CI/CD workflow using Jenkins and Terraform, including environment management, workspace automation, deployment approval, and notification handling.
