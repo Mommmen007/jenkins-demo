@@ -5,20 +5,33 @@ pipeline {
         choice(
             name: 'ENV',
             choices: ['dev', 'stg', 'prod'],
-            description: 'Select the deployment environment'
+            description: 'Choose Environment'
         )
     }
 
     stages {
-        stage('Show Environment') {
+
+        stage('Terraform Init') {
             steps {
-                echo "Selected Environment: ${params.ENV}"
+                sh 'terraform init'
             }
         }
 
-        stage('Deploy') {
+        stage('Terraform Plan') {
             steps {
-                echo "Deploying to ${params.ENV} environment..."
+                sh "terraform plan -var-file=${params.ENV}.tfvars -out=tfplan"
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                input message: "Deploy to ${params.ENV} ?", ok: "Apply"
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply tfplan'
             }
         }
     }
